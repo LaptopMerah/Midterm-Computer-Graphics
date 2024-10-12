@@ -1,62 +1,45 @@
-                                             //
-//  initShaders.js: contains the code to read, compile, and link the shaders.
-// Shaders are pro- grams that are compiled in the drivers. 
-//We create them as null-terminated strings of characters, usually with a standard text editor, which are eventually passed into WebGL. 
-
-function initShaders( gl, vertexShaderId, fragmentShaderId )
-{
-    var vertShdr;
-    var fragShdr;
-
-    var vertElem = document.getElementById( vertexShaderId );
-    if ( !vertElem ) {
-        alert( "Unable to load vertex shader " + vertexShaderId );
-        return -1;
-    }
-    else {
-        vertShdr = gl.createShader( gl.VERTEX_SHADER );
-        gl.shaderSource( vertShdr, vertElem.textContent.replace(/^\s+|\s+$/g, '' ));
-        gl.compileShader( vertShdr );
-        if ( !gl.getShaderParameter(vertShdr, gl.COMPILE_STATUS) ) {
-            var msg = "Vertex shader '"
-                + vertexShaderId
-                + "' failed to compile.  The error log is:\n\n"
-        	    + gl.getShaderInfoLog( vertShdr );
-            alert( msg );
-            return -1;
+function initShaders(gl) {
+    // Vertex Shader
+    let vertexShaderSource = `
+        attribute vec4 aPosition;
+        uniform mat4 uModelMatrix;
+        uniform mat4 uViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        void main(void) {
+            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * aPosition;
         }
-    }
+    `;
 
-    var fragElem = document.getElementById( fragmentShaderId );
-    if ( !fragElem ) {
-        alert( "Unable to load vertex shader " + fragmentShaderId );
-        return -1;
-    }
-    else {
-        fragShdr = gl.createShader( gl.FRAGMENT_SHADER );
-        gl.shaderSource( fragShdr, fragElem.textContent.replace(/^\s+|\s+$/g, '' ) );
-        gl.compileShader( fragShdr );
-        if ( !gl.getShaderParameter(fragShdr, gl.COMPILE_STATUS) ) {
-            var msg = "Fragment shader '"
-                + fragmentShaderId
-                + "' failed to compile.  The error log is:\n\n"
-        	    + gl.getShaderInfoLog( fragShdr );
-            alert( msg );
-            return -1;
+    // Fragment Shader
+    let fragmentShaderSource = `
+        precision mediump float;
+        void main(void) {
+            gl_FragColor = vec4(0.8, 0.3, 0.3, 1.0); // Set color to red-ish
         }
+    `;
+
+    // Compile and link shaders
+    const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+    const fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+    const shaderProgram = gl.createProgram();
+
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    // Check if program was linked successfully
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        console.error('Failed to link shader program:', gl.getProgramInfoLog(shaderProgram));
+        return null;
     }
 
-    var program = gl.createProgram();
-    gl.attachShader( program, vertShdr );
-    gl.attachShader( program, fragShdr );
-    gl.linkProgram( program );
+    gl.useProgram(shaderProgram);
 
-    if ( !gl.getProgramParameter(program, gl.LINK_STATUS) ) {
-        var msg = "Shader program failed to link.  The error log is:\n\n"
-            + gl.getProgramInfoLog( program );
-        alert( msg );
-        return -1;
-    }
+    // Get attribute and uniform locations
+    shaderProgram.aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
+    shaderProgram.uModelMatrix = gl.getUniformLocation(shaderProgram, "uModelMatrix");
+    shaderProgram.uViewMatrix = gl.getUniformLocation(shaderProgram, "uViewMatrix");
+    shaderProgram.uProjectionMatrix = gl.getUniformLocation(shaderProgram, "uProjectionMatrix");
 
-    return program;
+    return shaderProgram;
 }
