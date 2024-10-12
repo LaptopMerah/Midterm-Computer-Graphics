@@ -10,6 +10,17 @@ var MidtermGrafkom = function () {
   var normalsArray = [];
   var colorsArray = [];
 
+  //?
+  var objectPositionX = 0.0; // Current X position of the object
+  var objectPositionY = 0.0; // Current Y position of the object
+  var targetPositionX = 3; // Target X position for movement
+  var targetPositionY = 3; // Target Y position for movement
+  var isMovingX = false; // Track if the cube is moving along X
+  var isMovingY = false; // Track if the cube is moving along Y
+  var speedX = 0.01; // Default speed for X movement
+  var speedY = 0.01; // Default speed for Y movement
+  var canvasBoundary = 3.0; 
+
   var vertices = [
     vec4(-0.5, -0.5, 0.5, 1.0),
     vec4(-0.5, 0.5, 0.5, 1.0),
@@ -181,6 +192,33 @@ var MidtermGrafkom = function () {
       );
     };
 
+    //?
+    document.getElementById("ButtonMoveX").onclick = function () {
+      speedX = parseFloat(document.getElementById("speedX").value); // Get speed from input
+      if (!isMovingX) { // Start movement only if it's not already moving
+        isMovingX = true;
+      }
+    };
+    
+    // Button to start Y movement with input speed
+    document.getElementById("ButtonMoveY").onclick = function () {
+      speedY = parseFloat(document.getElementById("speedY").value); // Get speed from input
+      if (!isMovingY) { // Start movement only if it's not already moving
+        isMovingY = true;
+      }
+    };
+    
+    // Button to start diagonal movement (both X and Y) with the speeds from input fields
+    document.getElementById("ButtonMoveDiagonal").onclick = function () {
+      speedX = parseFloat(document.getElementById("speedX").value); // Get speed from input
+      speedY = parseFloat(document.getElementById("speedY").value); // Get speed from input
+      if (!isMovingX && !isMovingY) { // Start movement only if it's not already moving
+        isMovingX = true;
+        isMovingY = true;
+      }
+    };
+    
+    
     document.getElementById("lightX").oninput = function (event) {
       lightPosition[0] = event.target.value;
       updateLightPosition();
@@ -238,13 +276,49 @@ var MidtermGrafkom = function () {
     render();
   }
 
+  //?
 
+  function resetPosition() {
+    objectPositionX = 0.0;
+    objectPositionY = 0.0;
+    isMovingX = false;     // Stop X movement
+    isMovingY = false;  
+  }
+  
+
+  function moveObjectX() {
+    objectPositionX += speedX; // Move the object along X
+  
+    if (objectPositionX > canvasBoundary || objectPositionX < -canvasBoundary) {
+      resetPosition(); // Reset the object if it moves off the canvas
+      isMovingX = false; // Stop X movement
+    }
+  }
+  
+  // Function to move object along the Y axis and check boundaries
+  function moveObjectY() {
+    objectPositionY += speedY; // Move the object along Y
+  
+    if (objectPositionY > canvasBoundary || objectPositionY < -canvasBoundary) {
+      resetPosition(); // Reset the object if it moves off the canvas
+      isMovingY = false; // Stop Y movement
+    }
+  }
+  
   function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     if (flag) theta[axis] += 2.0;
 
+    if (isMovingX) moveObjectX();
+    if (isMovingY) moveObjectY();
+
     modelViewMatrix = mat4();
+
+    modelViewMatrix = mult(
+      modelViewMatrix, 
+      translate(objectPositionX, objectPositionY, 0));
+
     modelViewMatrix = mult(
       modelViewMatrix,
       rotate(theta[xAxis], vec3(1, 0, 0))

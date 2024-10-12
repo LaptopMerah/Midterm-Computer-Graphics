@@ -34,7 +34,22 @@
     <canvas id="gl-canvas"></canvas>
 
     <section class="absolute bg-gray-100 m-4 p-2 rounded-md shadow-md flex gap-2">
+
+        
         <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <button id="ButtonMoveX" class="button">Move X</button>
+                <label for="speedX">Speed X:</label>
+                <input type="number" id="speedX" name="speedX" value="0.01" step="0.01" min="0.01">
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="ButtonMoveY" class="button">Move Y</button>
+                <label for="speedY">Speed Y:</label>
+                <input type="number" id="speedY" name="speedY" value="0.01" step="0.01" min="0.01">
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="ButtonMoveDiagonal" class="button">Move Object</button>
+            </div>
             <button id="ButtonX" class="button">Rotate X</button>
             <button id="ButtonY" class="button">Rotate Y</button>
             <button id="ButtonZ" class="button">Rotate Z</button>
