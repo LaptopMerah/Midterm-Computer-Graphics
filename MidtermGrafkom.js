@@ -4,13 +4,12 @@ var MidtermGrafkom = function () {
   var canvas;
   var gl;
 
-  var numPositions = 36;
+  var numPositions = 108;
 
   var positionsArray = [];
   var normalsArray = [];
   var colorsArray = [];
 
-  //?
   var objectPositionX = 0.0; // Current X position of the object
   var objectPositionY = 0.0; // Current Y position of the object
   var targetPositionX = 3; // Target X position for movement
@@ -21,16 +20,37 @@ var MidtermGrafkom = function () {
   var speedY = 0.01; // Default speed for Y movement
   var canvasBoundary = 3.0; 
 
+  const A = (1 + Math.sqrt(5)) / 2;
+  const B = 1 / A;
+
   var vertices = [
-    vec4(-0.5, -0.5, 0.5, 1.0),
-    vec4(-0.5, 0.5, 0.5, 1.0),
-    vec4(0.5, 0.5, 0.5, 1.0),
-    vec4(0.5, -0.5, 0.5, 1.0),
-    vec4(-0.5, -0.5, -0.5, 1.0),
-    vec4(-0.5, 0.5, -0.5, 1.0),
-    vec4(0.5, 0.5, -0.5, 1.0),
-    vec4(0.5, -0.5, -0.5, 1.0),
+    vec4(1, 1, 1, 1.0),
+    vec4(1, 1, -1, 1.0),
+    vec4(1, -1, 1, 1.0),
+    vec4(1, -1, -1, 1.0),
+    vec4(-1, 1, 1, 1.0),
+    vec4(-1, 1, -1, 1.0),
+    vec4(-1, -1, 1, 1.0),
+    vec4(-1, -1, -1, 1.0),
+    vec4(0, B, A, 1.0),
+    vec4(0, B, -A, 1.0),
+    vec4(0, -B, A, 1.0),
+    vec4(0, -B, -A, 1.0),
+    vec4(B, A, 0, 1.0),
+    vec4(B, -A, 0, 1.0),
+    vec4(-B, A, 0, 1.0),
+    vec4(-B, -A, 0, 1.0),
+    vec4(A, 0, B, 1.0),
+    vec4(A, 0, -B, 1.0),
+    vec4(-A, 0, B, 1.0),
+    vec4(-A, 0, -B, 1.0),
   ];
+
+  for (var i = 0; i < vertices.length; i++) {
+    vertices[i][0] /= 3; // Scale the x component
+    vertices[i][1] /= 3; // Scale the y component
+    vertices[i][2] /= 3; // Scale the z component
+  }
 
   var objectColor = vec4(1.0, 1.0, 1.0, 0.0);
 
@@ -63,39 +83,59 @@ var MidtermGrafkom = function () {
 
   init();
 
-  function quad(a, b, c, d) {
+  function dedocahedron(a, b, c, d, e) {
     var t1 = subtract(vertices[b], vertices[a]);
     var t2 = subtract(vertices[c], vertices[b]);
     var normal = cross(t1, t2);
-    normal = vec3(normal);
+    normal = normalize(vec3(normal));
 
     positionsArray.push(vertices[a]);
-    normalsArray.push(normal);
-    colorsArray.push(objectColor);
     positionsArray.push(vertices[b]);
-    normalsArray.push(normal);
-    colorsArray.push(objectColor);
     positionsArray.push(vertices[c]);
-    normalsArray.push(normal);
-    colorsArray.push(objectColor);
     positionsArray.push(vertices[a]);
-    normalsArray.push(normal);
-    colorsArray.push(objectColor);
     positionsArray.push(vertices[c]);
-    normalsArray.push(normal);
-    colorsArray.push(objectColor);
     positionsArray.push(vertices[d]);
+    positionsArray.push(vertices[a]);
+    positionsArray.push(vertices[e]);
+    positionsArray.push(vertices[d]);
+
     normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
+    colorsArray.push(objectColor);
     colorsArray.push(objectColor);
   }
 
-  function colorCube() {
-    quad(1, 0, 3, 2);
-    quad(2, 3, 7, 6);
-    quad(3, 0, 4, 7);
-    quad(6, 5, 1, 2);
-    quad(4, 5, 6, 7);
-    quad(5, 4, 0, 1);
+  function colorDodecahedron() {
+    // Membentuk dodecahedron menggunakan pentagon()
+    // Setiap wajah pentagonal didefinisikan oleh 5 vertex dari vertices array
+
+    dedocahedron(0, 16, 2, 10, 8); // Wajah 1
+    dedocahedron(0, 8, 4, 14, 12); // Wajah 2
+    dedocahedron(16, 17, 1, 12, 0); // Wajah 3
+    dedocahedron(1, 9, 11, 3, 17); // Wajah 4
+    dedocahedron(1, 12, 14, 5, 9); // Wajah 5
+    dedocahedron(2, 13, 15, 6, 10); // Wajah 6
+    dedocahedron(13, 3, 17, 16, 2); // Wajah 7
+    dedocahedron(3, 11, 7, 15, 13); // Wajah 8
+    dedocahedron(4, 8, 10, 6, 18); // Wajah 9
+    dedocahedron(14, 5, 19, 18, 4); // Wajah 10
+    dedocahedron(5, 19, 7, 11, 9); // Wajah 11
+    dedocahedron(15, 7, 19, 18, 6); // Wajah 12
   }
 
   function init() {
@@ -116,7 +156,9 @@ var MidtermGrafkom = function () {
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    colorCube();
+    colorDodecahedron();
+    
+    numPositions = positionsArray.length;
 
     var nBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
@@ -192,32 +234,36 @@ var MidtermGrafkom = function () {
       );
     };
 
-    //?
+    document.getElementById("objectColor").oninput = function (event) {
+      objectColor = hexToRGBA(event.target.value);
+      gl.uniform4fv(
+        gl.getUniformLocation(program, "uObjectColor"),
+        objectColor
+      );
+    };
+
     document.getElementById("ButtonMoveX").onclick = function () {
-      speedX = parseFloat(document.getElementById("speedX").value); // Get speed from input
-      if (!isMovingX) { // Start movement only if it's not already moving
+      speedX = parseFloat(document.getElementById("speedX").value); 
+      if (!isMovingX) {
         isMovingX = true;
       }
     };
     
-    // Button to start Y movement with input speed
     document.getElementById("ButtonMoveY").onclick = function () {
-      speedY = parseFloat(document.getElementById("speedY").value); // Get speed from input
-      if (!isMovingY) { // Start movement only if it's not already moving
+      speedY = parseFloat(document.getElementById("speedY").value); 
+      if (!isMovingY) { 
         isMovingY = true;
       }
     };
     
-    // Button to start diagonal movement (both X and Y) with the speeds from input fields
     document.getElementById("ButtonMoveDiagonal").onclick = function () {
-      speedX = parseFloat(document.getElementById("speedX").value); // Get speed from input
-      speedY = parseFloat(document.getElementById("speedY").value); // Get speed from input
-      if (!isMovingX && !isMovingY) { // Start movement only if it's not already moving
+      speedX = parseFloat(document.getElementById("speedX").value); 
+      speedY = parseFloat(document.getElementById("speedY").value); 
+      if (!isMovingX && !isMovingY) {
         isMovingX = true;
         isMovingY = true;
       }
     };
-    
     
     document.getElementById("lightX").oninput = function (event) {
       lightPosition[0] = event.target.value;
@@ -248,6 +294,7 @@ var MidtermGrafkom = function () {
       gl.getUniformLocation(program, "uLightPosition"),
       lightPosition
     );
+    gl.uniform4fv(gl.getUniformLocation(program, "uObjectColor"), objectColor);
 
     gl.uniform1f(
       gl.getUniformLocation(program, "uShininess"),
@@ -272,37 +319,12 @@ var MidtermGrafkom = function () {
         flatten(projectionMatrix)
       );
     });
+    console.log("Ambient:", ambientProduct);
+    console.log("Diffuse:", diffuseProduct);
+    console.log("Specular:", specularProduct);
+    console.log("Object Color:", objectColor);
 
     render();
-  }
-
-  //?
-
-  function resetPosition() {
-    objectPositionX = 0.0;
-    objectPositionY = 0.0;
-    isMovingX = false;     // Stop X movement
-    isMovingY = false;  
-  }
-  
-
-  function moveObjectX() {
-    objectPositionX += speedX; // Move the object along X
-  
-    if (objectPositionX > canvasBoundary || objectPositionX < -canvasBoundary) {
-      resetPosition(); // Reset the object if it moves off the canvas
-      isMovingX = false; // Stop X movement
-    }
-  }
-  
-  // Function to move object along the Y axis and check boundaries
-  function moveObjectY() {
-    objectPositionY += speedY; // Move the object along Y
-  
-    if (objectPositionY > canvasBoundary || objectPositionY < -canvasBoundary) {
-      resetPosition(); // Reset the object if it moves off the canvas
-      isMovingY = false; // Stop Y movement
-    }
   }
   
   function render() {
@@ -356,5 +378,34 @@ var MidtermGrafkom = function () {
     let b = parseInt(hex.slice(5, 7), 16) / 255;
     return vec4(r, g, b, 1.0); // Return RGBA as vec4
   }
+
+   function resetPosition() {
+     objectPositionX = 0.0;
+     objectPositionY = 0.0;
+     isMovingX = false;
+     isMovingY = false;
+   }
+
+   function moveObjectX() {
+     objectPositionX += speedX;
+     if (
+       objectPositionX > canvasBoundary ||
+       objectPositionX < -canvasBoundary
+     ) {
+       resetPosition(); // Reset the object if it moves off the canvas
+       isMovingX = false; // Stop X movement
+     }
+   }
+
+   function moveObjectY() {
+     objectPositionY += speedY;
+     if (
+       objectPositionY > canvasBoundary ||
+       objectPositionY < -canvasBoundary
+     ) {
+       resetPosition(); // Reset the object if it moves off the canvas
+       isMovingY = false; // Stop Y movement
+     }
+   }
 };
 MidtermGrafkom();

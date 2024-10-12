@@ -8,6 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Midterm Grafkom</title>
     <style>
+        .scrollbar-hidden::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hidden {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         .button {
             background-color: #050708;
             color: white;
@@ -33,10 +42,8 @@
 <body class="flex gap-10 text-sm">
     <canvas id="gl-canvas"></canvas>
 
-    <section class="absolute bg-gray-100 m-4 p-2 rounded-md shadow-md flex gap-2">
-
-        
-        <div class="flex flex-col gap-2">
+    <section class="absolute bg-gray-100 m-4 p-2 rounded-md shadow-md flex gap-2 ">
+        <div class="flex flex-col gap-2 h-[90vh] overflow-y-auto scrollbar-hidden">
             <div class="flex items-center gap-2">
                 <button id="ButtonMoveX" class="button">Move X</button>
                 <label for="speedX">Speed X:</label>
@@ -94,58 +101,50 @@
     in vec4 aPosition;
     in vec3 aNormal;
 
+    out vec3 vN, vL, vE;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
-
-    out vec3 vNormal;
-    out vec3 vPosition;
+    uniform vec4 uLightPosition;
 
     void main() {
-        vPosition = (uModelViewMatrix * aPosition).xyz;
-        vNormal = normalize((uModelViewMatrix * vec4(aNormal, 0.0)).xyz);
+        vec3 pos = -(uModelViewMatrix * aPosition).xyz;
+        vec3 light = uLightPosition.xyz;
+        vL = normalize(light - pos);
+        vE = -pos;
+        vN = normalize((uModelViewMatrix * vec4(aNormal, 0.0)).xyz);
         gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
     }
-
     </script>
+
     <script id="fragment-shader" type="x-shader/x-fragment">
     #version 300 es
 
     precision mediump float;
 
-    in vec3 vNormal;
-    in vec3 vPosition;
-
+    uniform vec4 uObjectColor;
     uniform vec4 uAmbientProduct;
     uniform vec4 uDiffuseProduct;
     uniform vec4 uSpecularProduct;
-    uniform vec4 uLightPosition;
     uniform float uShininess;
 
+    in vec3 vN, vL, vE; // Perbaiki di sini
     out vec4 fColor;
 
     void main() {
-        vec3 light = normalize(uLightPosition.xyz - vPosition);
-        vec3 view = normalize(-vPosition);
-        vec3 halfVector = normalize(light + view);
-        vec3 normal = normalize(vNormal);
-
-        float Kd = max(dot(light, normal), 0.0);
+        vec4 color = uObjectColor;
+        vec3 H = normalize(vL + vE);
+        vec4 ambient = uAmbientProduct;
+        float Kd = max(dot(vL, vN), 0.0);
         vec4 diffuse = Kd * uDiffuseProduct;
-
-        float Ks = pow(max(dot(normal, halfVector), 0.0), uShininess);
+        float Ks = pow(max(dot(vN, H), 0.0), uShininess);
         vec4 specular = Ks * uSpecularProduct;
 
-        vec4 ambient = uAmbientProduct;
-
-        if (dot(light, normal) < 0.0) {
-            specular = vec4(0.0, 0.0, 0.0, 1.0);
-        }
-
-        fColor = ambient + diffuse + specular;
+        if (dot(vL, vN) < 0.0) specular = vec4(0.0, 0.0, 0.0, 1.0); 
+        fColor = ambient + diffuse + specular + color;
         fColor.a = 1.0;
     }
-
     </script>
+
 
 
     <script src="initShaders.js"></script>
