@@ -182,15 +182,15 @@ var MidtermGrafkom = function () {
     };
 
     document.getElementById("lightX").oninput = function (event) {
-      lightPosition = event.target.value;
+      lightPosition[0] = event.target.value;
       updateLightPosition();
     };
     document.getElementById("lightY").oninput = function (event) {
-      lightPosition = event.target.value;
+      lightPosition[1] = event.target.value;
       updateLightPosition();
     };
     document.getElementById("lightZ").oninput = function (event) {
-      lightPosition = event.target.value;
+      lightPosition[2] = event.target.value;
       updateLightPosition();
     };
 
