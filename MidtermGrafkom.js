@@ -12,13 +12,11 @@ var MidtermGrafkom = function () {
 
   var objectPositionX = 0.0; // Current X position of the object
   var objectPositionY = 0.0; // Current Y position of the object
-  var targetPositionX = 3; // Target X position for movement
-  var targetPositionY = 3; // Target Y position for movement
   var isMovingX = false; // Track if the cube is moving along X
   var isMovingY = false; // Track if the cube is moving along Y
   var speedX = 0.01; // Default speed for X movement
   var speedY = 0.01; // Default speed for Y movement
-  var canvasBoundary = 3.0; 
+  var canvasBoundary = 3.0;
 
   const A = (1 + Math.sqrt(5)) / 2;
   const B = 1 / A;
@@ -47,9 +45,9 @@ var MidtermGrafkom = function () {
   ];
 
   for (var i = 0; i < vertices.length; i++) {
-    vertices[i][0] /= 3; // Scale the x component
-    vertices[i][1] /= 3; // Scale the y component
-    vertices[i][2] /= 3; // Scale the z component
+    vertices[i][0] /= 4; // Scale the x component
+    vertices[i][1] /= 4; // Scale the y component
+    vertices[i][2] /= 4; // Scale the z component
   }
 
   var objectColor = vec4(1.0, 1.0, 1.0, 0.0);
@@ -64,12 +62,19 @@ var MidtermGrafkom = function () {
   var materialSpecular = vec4(1.0, 0.8, 0.0, 1.0);
   var materialShininess = 20.0;
 
-  var ctm;
   var ambientColor, diffuseColor, specularColor;
   var modelViewMatrix, projectionMatrix;
   var viewerPos;
   var program;
   var aspect;
+
+  let timerInterval;
+  const waktuInterval = 100;
+  var gravitasi = 0.025;
+  var gayaGesek;
+  var koefGesek = 0.01;
+  var accelerationX = 0.0;
+  var accelerationY = 0.0;
 
   var xAxis = 0;
   var yAxis = 1;
@@ -157,7 +162,7 @@ var MidtermGrafkom = function () {
     gl.useProgram(program);
 
     colorDodecahedron();
-    
+
     numPositions = positionsArray.length;
 
     var nBuffer = gl.createBuffer();
@@ -242,29 +247,33 @@ var MidtermGrafkom = function () {
       );
     };
 
+    document.getElementById("KoefGesek").oninput = function (event) {
+      koefGesek = event.target.value;
+    };
+
     document.getElementById("ButtonMoveX").onclick = function () {
-      speedX = parseFloat(document.getElementById("speedX").value); 
-      if (!isMovingX) {
-        isMovingX = true;
-      }
+      resetPosition();
+      speedX = parseFloat(document.getElementById("speedX").value);
+      isMovingX = true;
+      startMoving();
     };
-    
+
     document.getElementById("ButtonMoveY").onclick = function () {
-      speedY = parseFloat(document.getElementById("speedY").value); 
-      if (!isMovingY) { 
-        isMovingY = true;
-      }
+      resetPosition();
+      speedY = parseFloat(document.getElementById("speedY").value);
+      isMovingY = true;
+      startMoving();
     };
-    
+
     document.getElementById("ButtonMoveDiagonal").onclick = function () {
-      speedX = parseFloat(document.getElementById("speedX").value); 
-      speedY = parseFloat(document.getElementById("speedY").value); 
-      if (!isMovingX && !isMovingY) {
-        isMovingX = true;
-        isMovingY = true;
-      }
+      resetPosition();
+      speedX = parseFloat(document.getElementById("speedX").value);
+      speedY = parseFloat(document.getElementById("speedY").value);
+      isMovingX = true;
+      isMovingY = true;
+      startMoving();
     };
-    
+
     document.getElementById("lightX").oninput = function (event) {
       lightPosition[0] = event.target.value;
       updateLightPosition();
@@ -326,32 +335,29 @@ var MidtermGrafkom = function () {
 
     render();
   }
-  
+
   function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     if (flag) theta[axis] += 2.0;
 
-    if (isMovingX) moveObjectX();
-    if (isMovingY) moveObjectY();
-
     modelViewMatrix = mat4();
 
     modelViewMatrix = mult(
-      modelViewMatrix, 
-      translate(objectPositionX, objectPositionY, 0));
-
-    modelViewMatrix = mult(
       modelViewMatrix,
-      rotate(theta[xAxis], vec3(1, 0, 0))
+      translate(objectPositionX, objectPositionY, 0)
     );
     modelViewMatrix = mult(
       modelViewMatrix,
-      rotate(theta[yAxis], vec3(0, 1, 0))
+      rotate(theta[xAxis], vec3(0.2, 0, 0))
     );
     modelViewMatrix = mult(
       modelViewMatrix,
-      rotate(theta[zAxis], vec3(0, 0, 1))
+      rotate(theta[yAxis], vec3(0, 0.2, 0))
+    );
+    modelViewMatrix = mult(
+      modelViewMatrix,
+      rotate(theta[zAxis], vec3(0, 0, 0.2))
     );
 
     gl.uniformMatrix4fv(
@@ -379,33 +385,55 @@ var MidtermGrafkom = function () {
     return vec4(r, g, b, 1.0); // Return RGBA as vec4
   }
 
-   function resetPosition() {
-     objectPositionX = 0.0;
-     objectPositionY = 0.0;
-     isMovingX = false;
-     isMovingY = false;
-   }
+  function startMoving() {
+    if (speedX >= 0) {
+      gayaGesek = -Math.abs(koefGesek * gravitasi); // Gaya gesek negatif jika speedX positif
+    } else if (speedX < 0) {
+      gayaGesek = Math.abs(koefGesek * gravitasi); // Gaya gesek positif jika speedX negatif
+    }
+    timerInterval = setInterval(
+      () => perbaruiKecepatan(speedX, speedY, gayaGesek, gravitasi),
+      waktuInterval
+    );
+  }
+  function resetPosition() {
+    objectPositionX = 0.0;
+    objectPositionY = 0.0;
+    isMovingX = false; // Stop X movement
+    isMovingY = false;
+    clearInterval(timerInterval);
+    accelerationX = 0.0;
+    accelerationY = 0.0;
+    gayaGesek = 0;
+  }
 
-   function moveObjectX() {
-     objectPositionX += speedX;
-     if (
-       objectPositionX > canvasBoundary ||
-       objectPositionX < -canvasBoundary
-     ) {
-       resetPosition(); // Reset the object if it moves off the canvas
-       isMovingX = false; // Stop X movement
-     }
-   }
+  function perbaruiKecepatan(speedX, speedY, gayaGesek, gravitasi) {
+    if (isMovingX) {
+      // Hitung akselerasi dengan mengurangi gaya gesek dari speedX
+      accelerationX += (speedX + gayaGesek);
 
-   function moveObjectY() {
-     objectPositionY += speedY;
-     if (
-       objectPositionY > canvasBoundary ||
-       objectPositionY < -canvasBoundary
-     ) {
-       resetPosition(); // Reset the object if it moves off the canvas
-       isMovingY = false; // Stop Y movement
-     }
-   }
+      // Update posisi objek berdasarkan akselerasi
+      objectPositionX += accelerationX;
+
+      // Reset posisi jika melewati batas
+      if (Math.abs(objectPositionX) > canvasBoundary) {
+        resetPosition(); // Reset jika keluar batas
+      }
+    }
+
+    if (isMovingY && speedY != 0) {
+      // Hitung akselerasi dengan menambah gravitasi
+      accelerationY += gravitasi;
+
+      // Update posisi objek dengan mengurangi akselerasi dari speedY
+      objectPositionY += (speedY - accelerationY);
+
+      // Reset posisi jika melewati batas
+      if (Math.abs(objectPositionY) > canvasBoundary) {
+        resetPosition(); // Reset jika keluar batas
+      }
+      render();
+    }
+  }
 };
 MidtermGrafkom();
